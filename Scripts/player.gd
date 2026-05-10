@@ -1,27 +1,59 @@
 extends CharacterBody2D
 
-# --- CHỈ SỐ DI CHUYỂN ---
+# ══════════════════════════════
+#  CHỈ SỐ DI CHUYỂN
+# ══════════════════════════════
 const SPEED = 100.0
 const JUMP_VELOCITY = -250.0
 const DOUBLE_JUMP_VELOCITY = -200.0
 
-# --- CƠ CHẾ NHẢY ---
+# ══════════════════════════════
+#  CƠ CHẾ NHẢY
+# ══════════════════════════════
 var jump_count = 0
 const MAX_JUMPS = 2
 
-# --- CƠ CHẾ ÁNH SÁNG SINH MỆNH ---
-var light_energy: float = 1.0 # 100%
-const DECAY_RATE: float = 0.05 # Tốc độ giảm lửa (giảm 5% mỗi giây)
-var is_dead: bool = false
+# ══════════════════════════════
+#  CƠ CHẾ ÁNH SÁNG SINH MỆNH
+# ══════════════════════════════
+var light_energy: float = 1.0         # 1.0 = 100%
+const DECAY_RATE: float = 0.02        # giảm 2% mỗi giây → sống ~50s nếu không chạm gì
+const LIGHT_MAX_SCALE: float = 3.0    # kích thước vòng sáng tối đa
+const LIGHT_MIN_SCALE: float = 0.3    # kích thước vòng sáng tối thiểu
 
-# --- TRỌNG LỰC & NODE ---
+# ══════════════════════════════
+#  CƠ CHẾ GAI (SPIKES)
+# ══════════════════════════════
+var on_spikes: bool = false
+var spike_timer: float = 0.0
+const SPIKE_DAMAGE_INTERVAL: float = 1.2  # hit lại mỗi 1.2s nếu đứng yên trên gai
+
+# ══════════════════════════════
+#  TRẠNG THÁI
+# ══════════════════════════════
+var is_dead: bool = false
+var is_hit: bool = false
+
+# ══════════════════════════════
+#  TRỌNG LỰC & NODE
+# ══════════════════════════════
 var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 
-@onready var anim = $AnimatedSprite2D
-@onready var point_light = $PointLight2D # Đảm bảo bạn đã thêm Node này và đặt đúng tên
+@onready var anim        = $AnimatedSprite2D
+@onready var point_light = $PointLight2D
 
+
+# ══════════════════════════════
+#  KHỞI TẠO
+# ══════════════════════════════
+func _ready():
+	anim.animation_finished.connect(_on_animation_finished)
+
+
+# ══════════════════════════════
+#  VÒNG LẶP CHÍNH
+# ══════════════════════════════
 func _physics_process(delta):
-	# 0. NẾU CHẾT THÌ DỪNG MỌI THỨ
 	if is_dead:
 		return
 
@@ -29,9 +61,9 @@ func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
-		jump_count = 0 # Reset số lần nhảy khi chạm đất
+		jump_count = 0
 
-	# 2. XỬ LÝ NHẢY (DOUBLE JUMP)
+	# 2. NHẢY (DOUBLE JUMP)
 	if Input.is_action_just_pressed("move_accept"):
 		if is_on_floor():
 			velocity.y = JUMP_VELOCITY
@@ -39,57 +71,132 @@ func _physics_process(delta):
 		elif jump_count < MAX_JUMPS:
 			velocity.y = DOUBLE_JUMP_VELOCITY
 			jump_count += 1
-			# Nếu bạn có animation "roll", hãy bật nó ở đây:
-			# anim.play("roll")
 
-	# 3. DI CHUYỂN TRÁI PHẢI & ANIMATION
+	# 3. DI CHUYỂN TRÁI PHẢI
 	var direction = Input.get_axis("move_left", "move_right")
-	
 	if direction:
 		velocity.x = direction * SPEED
-		anim.play("run")
 		anim.flip_h = direction < 0
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
-		if is_on_floor():
-			anim.play("idle")
 
 	move_and_slide()
-	
-	# 4. CẬP NHẬT ÁNH SÁNG
-	handle_light_decay(delta)
 
-# --- HÀM XỬ LÝ ÁNH SÁNG ---
-func handle_light_decay(delta):
-	if light_energy > 0:
-		light_energy -= DECAY_RATE * delta
-		# Cập nhật độ lớn của ánh sáng theo năng lượng còn lại
-		if point_light:
-			point_light.texture_scale = max(light_energy, 0.1) 
-		
-		if light_energy <= 0:
-			die()
+	# 4. ANIMATION
+	_update_animation()
 
-# --- HÀM KHI DÍNH SÁT THƯƠNG (Gai/Bánh cưa gọi hàm này) ---
-func take_damage(amount: float):
-	light_energy -= amount
-	# Hiệu ứng nảy lên khi dính bẫy
-	velocity.y = -200 
-	print("Ouch! Còn lại: ", int(light_energy * 100), "% lửa")
-	
+	# 5. ÁNH SÁNG DECAY
+	_handle_light_decay(delta)
+
+	# 6. DAMAGE LIÊN TỤC KHI ĐỨNG TRÊN GAI
+	if on_spikes:
+		spike_timer -= delta
+		if spike_timer <= 0:
+			take_damage(0.10)
+			spike_timer = SPIKE_DAMAGE_INTERVAL
+
+
+# ══════════════════════════════
+#  ANIMATION
+# ══════════════════════════════
+func _update_animation():
+	if is_hit or is_dead:
+		return
+
+	if not is_on_floor():
+		anim.play("jump")
+	elif Input.get_axis("move_left", "move_right") != 0:
+		anim.play("run")
+	else:
+		anim.play("idle")
+
+func _on_animation_finished(anim_name: StringName):
+	if anim_name == "hit":
+		is_hit = false
+	elif anim_name == "death":
+		pass
+
+
+# ══════════════════════════════
+#  ÁNH SÁNG
+# ══════════════════════════════
+func _handle_light_decay(delta):
+	if light_energy <= 0:
+		return
+
+	light_energy -= DECAY_RATE * delta
+	light_energy = max(light_energy, 0.0)
+
+	if point_light:
+		point_light.texture_scale = lerp(LIGHT_MIN_SCALE, LIGHT_MAX_SCALE, light_energy)
+
 	if light_energy <= 0:
 		die()
 
-# --- HÀM KHI CHẾT ---
+func add_energy(amount: float):
+	# Gọi khi nhặt than/củi
+	light_energy = min(light_energy + amount, 1.0)
+
+
+# ══════════════════════════════
+#  NHẬN SÁT THƯƠNG
+# ══════════════════════════════
+func take_damage(amount: float):
+	if is_dead or is_hit:
+		return
+
+	light_energy -= amount
+	light_energy = max(light_energy, 0.0)
+	velocity.y = -200
+
+	is_hit = true
+	anim.play("hit")
+	
+	await get_tree().create_timer(0.2).timeout
+	if not is_dead:
+		is_hit = false
+
+	if light_energy <= 0:
+		die()
+
+
+# ══════════════════════════════
+#  CHẾT
+# ══════════════════════════════
 func die():
-	if is_dead: return
+	if is_dead:
+		return
 	is_dead = true
+	on_spikes = false
 	velocity = Vector2.ZERO
 	anim.play("death")
-	print("Lửa đã tắt... Game Over!")
 
-# --- HÀM KẾT NỐI TÍN HIỆU TỪ GAI (SPIKES) ---
-# Cách làm: Chọn Area2D (Gai) -> Node -> body_entered -> Kết nối vào Player
-func _on_spike_body_entered(body: Node2D) -> void:
+	if point_light:
+		point_light.enabled = false
+
+	await get_tree().create_timer(1.5).timeout
+	get_tree().call_deferred("reload_current_scene")
+
+
+# ══════════════════════════════
+#  SIGNAL TỪ GAI (SPIKES)
+#  Editor: Spikes → body_entered  → _on_spikes_body_entered
+#          Spikes → body_exited   → _on_spikes_body_exited
+# ══════════════════════════════
+func _on_spikes_body_entered(body: Node2D) -> void:
 	if body == self:
-		take_damage(0.2) # Dính gai trừ 20% máu
+		on_spikes = true
+		spike_timer = 0.0    # hit ngay lập tức khi bước vào
+
+func _on_spikes_body_exited(body: Node2D) -> void:
+	if body == self:
+		on_spikes = false    # bước ra → dừng hoàn toàn
+
+
+# ══════════════════════════════
+#  SIGNAL TỪ BÁNH CƯA (SAWBLADE)
+#  Editor: Sawblade → body_entered → _on_sawblade_body_entered
+# ══════════════════════════════
+func _on_sawblade_body_entered(body: Node2D) -> void:
+	if body == self:
+		take_damage(0.20)    # bánh cưa trừ 20% một lần
