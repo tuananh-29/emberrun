@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://l1t1noh6tk"]
+[gd_scene load_steps=19 format=3 uid="uid://l1t1noh6tk"]
 
 [ext_resource type="Texture2D" uid="uid://cakrfxgw3ycij" path="res://Assets/Dungeon Tile Set/Dungeon Tile Set/Dungeon Tile Set.png" id="1_3dryh"]
 [ext_resource type="PackedScene" uid="uid://2vnrnjxocqku" path="res://Scenes/player.tscn" id="1_ebmjs"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://b8olq21bh4ypl" path="res://Scenes/Sawblade.tscn" id="6_1l0tm"]
 [ext_resource type="PackedScene" uid="uid://cx5vodijvd3vs" path="res://Scenes/coal.tscn" id="8_v158k"]
 [ext_resource type="PackedScene" uid="uid://ckq6bipq5r0ku" path="res://Scenes/torch.tscn" id="9_h4fw4"]
+[ext_resource type="PackedScene" uid="uid://bt77ct71nbl7g" path="res://Scenes/ui.tscn" id="10_ldgsr"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_i6g32"]
 texture = ExtResource("1_3dryh")
@@ -2552,6 +2553,8 @@ position = Vector2(-24, 90)
 
 [node name="Torch2" parent="." instance=ExtResource("9_h4fw4")]
 position = Vector2(360, 105)
+
+[node name="UI" parent="." instance=ExtResource("10_ldgsr")]
 
 [connection signal="body_entered" from="Spikes" to="Player" method="_on_spikes_body_entered"]
 [connection signal="body_exited" from="Spikes" to="Player" method="_on_spikes_body_exited"]

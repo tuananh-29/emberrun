@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://cx5vodijvd3vs"]
 
-[ext_resource type="Script" uid="uid://kmvrlyigbh13" path="res://Scenes/coal.gd" id="1_x6f8n"]
+[ext_resource type="Script" uid="uid://kmvrlyigbh13" path="res://Scripts/coal (2).gd" id="1_x6f8n"]
 
 [sub_resource type="Gradient" id="Gradient_4v3ac"]
 colors = PackedColorArray(1, 0.54901963, 0.1254902, 1, 1, 0.54901963, 0.1254902, 0)
