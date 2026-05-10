@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=3 uid="uid://ckq6bipq5r0ku"]
+
+[ext_resource type="Script" uid="uid://ckokh25ahcgfp" path="res://Scripts/torch.gd" id="1_h1t0l"]
+[ext_resource type="Texture2D" uid="uid://b4c0e2r6aof56" path="res://Assets/RF_Catacombs_v1.0/candleA_04.png" id="1_wced7"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_h1t0l"]
+radius = 28.0
+
+[sub_resource type="Gradient" id="Gradient_beu3c"]
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_spjw2"]
+gradient = SubResource("Gradient_beu3c")
+fill = 1
+fill_from = Vector2(0.5, 0.5046729)
+
+[node name="Torch" type="Area2D"]
+script = ExtResource("1_h1t0l")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_h1t0l")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_wced7")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(1, 0.54901963, 0.1254902, 1)
+energy = 0.0
+texture = SubResource("GradientTexture2D_spjw2")
+texture_scale = 2.0

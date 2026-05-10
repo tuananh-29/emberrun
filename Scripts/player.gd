@@ -200,3 +200,11 @@ func _on_spikes_body_exited(body: Node2D) -> void:
 func _on_sawblade_body_entered(body: Node2D) -> void:
 	if body == self:
 		take_damage(0.20)    # bánh cưa trừ 20% một lần
+
+
+func _on_torch_body_entered(body: Node2D) -> void:
+	pass # Replace with function body.
+
+
+func _on_torch_2_body_entered(body: Node2D) -> void:
+	pass # Replace with function body.
