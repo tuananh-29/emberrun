@@ -1496,11 +1496,8 @@ texture = ExtResource("3_1l0tm")
 12:0/0 = 0
 13:0/0 = 0
 14:0/0 = 0
-0:1/0 = 0
-2:1/0 = 0
-2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 3:1/0 = 0
-3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 0.17985916, -8, 0.35971642, 0.17985916, 8, 0.17985916, 8, 8, -8, 8, -8, 8)
 4:1/0 = 0
 5:1/0 = 0
 6:1/0 = 0
@@ -2181,6 +2178,8 @@ texture = ExtResource("3_1l0tm")
 12:51/0 = 0
 13:51/0 = 0
 0:18/0 = 0
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, 0, 0.17985916, -8, 8, -8, 8, 8, -8, 8, -8, 0.17985916)
 
 [sub_resource type="TileSet" id="TileSet_3dryh"]
 physics_layer_0/collision_layer = 1
@@ -2208,12 +2207,10 @@ layer_2/name = "Layer2"
 layer_2/z_index = 1
 
 [node name="Player" parent="." instance=ExtResource("1_ebmjs")]
-position = Vector2(160, 127)
-script = null
+position = Vector2(79, 600)
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
 zoom = Vector2(4, 4)
-limit_enabled = false
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
 visible = false
@@ -2229,10 +2226,10 @@ offset_bottom = 31.0
 value = 100.0
 
 [node name="TextureProgressBar" type="TextureProgressBar" parent="CanvasLayer"]
-offset_left = 7.0
-offset_top = -6.0
-offset_right = 289.0
-offset_bottom = 42.0
+offset_left = 8.0
+offset_top = -7.0
+offset_right = 290.0
+offset_bottom = 41.0
 texture_under = SubResource("CompressedTexture2D_o5yvi")
 texture_progress = SubResource("CompressedTexture2D_rku1e")
 script = ExtResource("12_rfjv2")

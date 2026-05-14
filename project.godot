@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="Emberrun"
+run/main_scene="uid://l1t1noh6tk"
 config/features=PackedStringArray("4.5", "GL Compatibility")
-config/icon="res://icon.svg"
 
 [input]
 

@@ -16,17 +16,17 @@ const MAX_JUMPS = 2
 # ══════════════════════════════
 #  CƠ CHẾ ÁNH SÁNG SINH MỆNH
 # ══════════════════════════════
-var light_energy: float = 1.0         # 1.0 = 100%
-const DECAY_RATE: float = 0.02        # giảm 2% mỗi giây → sống ~50s nếu không chạm gì
-const LIGHT_MAX_SCALE: float = 3.0    # kích thước vòng sáng tối đa
-const LIGHT_MIN_SCALE: float = 0.3    # kích thước vòng sáng tối thiểu
+var light_energy: float = 1.0
+const DECAY_RATE: float = 0.02
+const LIGHT_MAX_SCALE: float = 3.0
+const LIGHT_MIN_SCALE: float = 0.3
 
 # ══════════════════════════════
 #  CƠ CHẾ GAI (SPIKES)
 # ══════════════════════════════
 var on_spikes: bool = false
 var spike_timer: float = 0.0
-const SPIKE_DAMAGE_INTERVAL: float = 1.2  # hit lại mỗi 1.2s nếu đứng yên trên gai
+const SPIKE_DAMAGE_INTERVAL: float = 1.2
 
 # ══════════════════════════════
 #  TRẠNG THÁI
@@ -42,12 +42,29 @@ var gravity = ProjectSettings.get_setting("physics/2d/default_gravity")
 @onready var anim        = $AnimatedSprite2D
 @onready var point_light = $PointLight2D
 
+var energy_bar:   ProgressBar
+var energy_label: Label
+
 
 # ══════════════════════════════
 #  KHỞI TẠO
 # ══════════════════════════════
 func _ready():
 	anim.animation_finished.connect(_on_animation_finished)
+	call_deferred("_find_ui_nodes")
+
+	# Leo bậc thang mượt
+	floor_snap_length = 10.0           # bám sàn khi đi xuống bậc
+	floor_max_angle = deg_to_rad(46)   # góc tối đa coi là sàn
+	floor_stop_on_slope = true         # không trượt khi đứng trên dốc
+
+
+func _find_ui_nodes():
+	var ui = get_tree().get_root().find_child("UI", true, false)
+	if ui:
+		energy_bar   = ui.find_child("ProgressBar", true, false)
+		energy_label = ui.find_child("Label",       true, false)
+	_update_ui()
 
 
 # ══════════════════════════════
@@ -82,6 +99,9 @@ func _physics_process(delta):
 
 	move_and_slide()
 
+	# Snap bậc thang — chỉ bật khi đang đứng trên sàn
+	floor_snap_length = 10.0 if is_on_floor() else 0.0
+
 	# 4. ANIMATION
 	_update_animation()
 
@@ -104,7 +124,10 @@ func _update_animation():
 		return
 
 	if not is_on_floor():
-		anim.play("jump")
+		if anim.sprite_frames.has_animation("jump"):
+			anim.play("jump")
+		else:
+			anim.play("idle")
 	elif Input.get_axis("move_left", "move_right") != 0:
 		anim.play("run")
 	else:
@@ -118,7 +141,7 @@ func _on_animation_finished(anim_name: StringName):
 
 
 # ══════════════════════════════
-#  ÁNH SÁNG
+#  ÁNH SÁNG & UI
 # ══════════════════════════════
 func _handle_light_decay(delta):
 	if light_energy <= 0:
@@ -130,12 +153,29 @@ func _handle_light_decay(delta):
 	if point_light:
 		point_light.texture_scale = lerp(LIGHT_MIN_SCALE, LIGHT_MAX_SCALE, light_energy)
 
+	_update_ui()
+
 	if light_energy <= 0:
 		die()
 
+
+func _update_ui():
+	if energy_bar:
+		energy_bar.value = light_energy * 100
+	if energy_label:
+		var pct = int(light_energy * 100)
+		energy_label.text = str(pct) + "%"
+		if pct > 60:
+			energy_label.add_theme_color_override("font_color", Color("#F8A020"))
+		elif pct > 30:
+			energy_label.add_theme_color_override("font_color", Color("#E85020"))
+		else:
+			energy_label.add_theme_color_override("font_color", Color("#FF2020"))
+
+
 func add_energy(amount: float):
-	# Gọi khi nhặt than/củi
 	light_energy = min(light_energy + amount, 1.0)
+	_update_ui()
 
 
 # ══════════════════════════════
@@ -151,10 +191,12 @@ func take_damage(amount: float):
 
 	is_hit = true
 	anim.play("hit")
-	
+
 	await get_tree().create_timer(0.2).timeout
 	if not is_dead:
 		is_hit = false
+
+	_update_ui()
 
 	if light_energy <= 0:
 		die()
@@ -186,11 +228,11 @@ func die():
 func _on_spikes_body_entered(body: Node2D) -> void:
 	if body == self:
 		on_spikes = true
-		spike_timer = 0.0    # hit ngay lập tức khi bước vào
+		spike_timer = 0.0
 
 func _on_spikes_body_exited(body: Node2D) -> void:
 	if body == self:
-		on_spikes = false    # bước ra → dừng hoàn toàn
+		on_spikes = false
 
 
 # ══════════════════════════════
@@ -199,12 +241,17 @@ func _on_spikes_body_exited(body: Node2D) -> void:
 # ══════════════════════════════
 func _on_sawblade_body_entered(body: Node2D) -> void:
 	if body == self:
-		take_damage(0.20)    # bánh cưa trừ 20% một lần
+		take_damage(0.20)
 
 
+# ══════════════════════════════
+#  SIGNAL TỪ ĐUỐC
+#  Editor: Torch → body_entered → _on_torch_body_entered
+# ══════════════════════════════
 func _on_torch_body_entered(body: Node2D) -> void:
-	pass # Replace with function body.
-
+	if body == self:
+		add_energy(0.30)
 
 func _on_torch_2_body_entered(body: Node2D) -> void:
-	pass # Replace with function body.
+	if body == self:
+		add_energy(0.30)
