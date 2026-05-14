@@ -1,20 +1,18 @@
 [gd_scene load_steps=5 format=3 uid="uid://cx5vodijvd3vs"]
 
-[ext_resource type="Script" uid="uid://kmvrlyigbh13" path="res://Scripts/coal (2).gd" id="1_x6f8n"]
+[ext_resource type="Script" uid="uid://pf0o33ap4nvs" path="res://Scripts/coal.gd" id="1_x6f8n"]
 
 [sub_resource type="Gradient" id="Gradient_4v3ac"]
 colors = PackedColorArray(1, 0.54901963, 0.1254902, 1, 1, 0.54901963, 0.1254902, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_x6f8n"]
 gradient = SubResource("Gradient_4v3ac")
-width = 32
-height = 32
+width = 16
+height = 16
 fill = 1
-fill_from = Vector2(0.4906542, 0.48598132)
-fill_to = Vector2(1, 1)
+fill_from = Vector2(0.5, 0.505)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7w8tp"]
-radius = 8.0
 
 [node name="Coal" type="Area2D"]
 script = ExtResource("1_x6f8n")
@@ -23,4 +21,5 @@ script = ExtResource("1_x6f8n")
 texture = SubResource("GradientTexture2D_x6f8n")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+scale = Vector2(0.5, 0.5)
 shape = SubResource("CircleShape2D_7w8tp")
